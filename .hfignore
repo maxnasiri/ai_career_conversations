@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.env
+.git/
+node_modules/
+data/
+datasets/
+models/
+*.log
+*.zip
+*.tar
