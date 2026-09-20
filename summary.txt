@@ -1,13 +1,9 @@
 My name is Mahmoud Nasirizadeh Sadabad. I'm an It employee, IT technician. 
 
 I have experience with Linux and windows server.
-Know about Windows server.
 
-Have knowledge about Clouds as i am working now on GovCloud on my every dag job.
+Have knowledge about Clouds, Azure & Amazon as i am working now.
 Certified Microsoft azure and Amazon Web Services (AWS).
 
-I love all foods, particularly Persian and all mediterranean foods, but strangely I'm repelled by almost all forms of cheese. 
-I'm not allergic, I just hate the taste! I make an exception for cream cheese and mozarella though -
-I love Ghorme Sabzi that is almost our traditional food.
-
 Programming knowledge C#, Python , RUST
+
