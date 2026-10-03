@@ -131,10 +131,10 @@ HEAD = """
 <meta property="og:type" content="website"><meta property="og:title" content="My AI Conversation Career">
 <meta property="og:description" content="Chat with my AI profile about my experience, technical skills, and career journey.">
 <meta property="og:url" content="https://maxnasiri-career-conversations.hf.space/">
-<meta property="og:image" content="https://huggingface.co/spaces/maxnasiri/career_conversations/resolve/main/assets/ai-career-preview.png">
+<meta property="og:image" content="https://huggingface.co/spaces/maxnasiri/career_conversations/resolve/main/assets/ai-career-preview-v2.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="My AI Conversation Career">
-<meta name="twitter:image" content="https://huggingface.co/spaces/maxnasiri/career_conversations/resolve/main/assets/ai-career-preview.png">
+<meta name="twitter:image" content="https://huggingface.co/spaces/maxnasiri/career_conversations/resolve/main/assets/ai-career-preview-v2.png">
 """
 
 if __name__ == "__main__":
