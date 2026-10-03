@@ -9,6 +9,8 @@ from openai import OpenAI
 from pypdf import PdfReader
 
 BASE_DIR = Path(__file__).resolve().parent
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_MODEL = "openai/gpt-4o-mini"
 load_dotenv(override=True)
 
 
@@ -36,7 +38,17 @@ tools = [
 
 class Me:
     def __init__(self):
-        self.openai = OpenAI()
+        openrouter_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if not openrouter_key:
+            raise RuntimeError("Set OPENROUTER_API_KEY before starting the application.")
+        self.openai = OpenAI(
+            base_url=OPENROUTER_BASE_URL,
+            api_key=openrouter_key,
+            default_headers={
+                "HTTP-Referer": "https://maxnasiri-career-conversations.hf.space/",
+                "X-OpenRouter-Title": "My AI Conversation Career",
+            },
+        )
         self.name = "Mahmoud Nasirizadeh Sadabad"
         reader = PdfReader(BASE_DIR / "linkedin.pdf")
         self.linkedin = "".join(page.extract_text() or "" for page in reader.pages)
@@ -67,22 +79,31 @@ ask for their email and call record_user_details after they provide it.
     def chat(self, message, history):
         messages = [{"role": "system", "content": self.system_prompt()}, *history, {"role": "user", "content": message}]
         while True:
-            reply = self.openai.chat.completions.create(model="gpt-4o-mini", messages=messages, tools=tools).choices[0]
+            reply = self.openai.chat.completions.create(model=OPENROUTER_MODEL, messages=messages, tools=tools).choices[0]
             if reply.finish_reason != "tool_calls":
                 return reply.message.content
             messages.append(reply.message)
             messages.extend(self.handle_tool_call(reply.message.tool_calls))
 
 
-ORB_HTML = """
+def orb_ring(offset=0):
+    return "".join(
+        f'<span class="particle" style="--i:{dot};--delay:{(offset + dot) % 12}"></span>'
+        for dot in range(12)
+    )
+
+ORB_HTML = f"""
 <section class="career-hero" aria-labelledby="career-title">
-  <div class="thinking-orb" role="img" aria-label="AI solving and listening animation">
-    <div class="orb-halo halo-one"></div><div class="orb-halo halo-two"></div><div class="orb-core"></div>
-    <span class="orb-dot dot-1"></span><span class="orb-dot dot-2"></span><span class="orb-dot dot-3"></span>
-    <span class="orb-dot dot-4"></span><span class="orb-dot dot-5"></span><span class="orb-dot dot-6"></span>
+  <div class="thinking-orb" role="img" aria-label="AI thinking and solving animation">
+    <div class="particle-ring ring-1">{orb_ring(0)}</div>
+    <div class="particle-ring ring-2">{orb_ring(2)}</div>
+    <div class="particle-ring ring-3">{orb_ring(4)}</div>
+    <div class="particle-ring ring-4">{orb_ring(6)}</div>
+    <div class="particle-ring ring-5">{orb_ring(8)}</div>
+    <div class="particle-ring vertical-ring">{orb_ring(10)}</div>
   </div>
   <div class="hero-copy">
-    <p class="eyebrow"><span class="live-dot"></span><span class="state-label">SOLVING / LISTENING</span></p>
+    <p class="eyebrow"><span class="live-dot"></span><span class="state-wrap"><span class="state-thinking">THINKING</span><span class="state-solving">SOLVING</span></span></p>
     <h1 id="career-title">My AI Conversation Career</h1>
     <p>Talk with my AI profile about my experience, technical skills, and career journey.</p>
   </div>
@@ -93,12 +114,16 @@ CSS = """
 :root{--cyber:#00ff88;--cyber-soft:#40ffad}.gradio-container{max-width:980px!important}
 .career-hero{display:flex;align-items:center;justify-content:center;gap:clamp(2rem,7vw,5rem);padding:clamp(2rem,6vw,4rem);margin:1rem 0 1.5rem;min-height:320px;overflow:hidden;border:1px solid rgba(0,255,136,.22);border-radius:24px;background:radial-gradient(circle at 24% 50%,rgba(0,255,136,.14),transparent 34%),linear-gradient(135deg,#07130f,#020705);color:#f4fff9;box-shadow:0 20px 60px rgba(0,0,0,.22)}
 .hero-copy{max-width:510px;position:relative;z-index:2}.hero-copy h1{font-size:clamp(2rem,5vw,4rem);line-height:1.02;letter-spacing:-.04em;margin:.35rem 0 1rem;color:#f7fffb}.hero-copy p:last-child{color:#b8c9c1;font-size:1.05rem;line-height:1.6;margin:0}
-.eyebrow{display:flex;align-items:center;gap:.55rem;color:var(--cyber);letter-spacing:.18em;font-size:.74rem;font-weight:800;margin:0}.live-dot{width:8px;height:8px;border-radius:50%;background:var(--cyber);box-shadow:0 0 16px var(--cyber);animation:blink 1.4s ease-in-out infinite}
-.thinking-orb{width:190px;height:190px;flex:0 0 190px;position:relative;border-radius:50%;filter:drop-shadow(0 0 28px rgba(0,255,136,.3));animation:orbBreathe 3.2s ease-in-out infinite}.orb-core{position:absolute;inset:28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#9affce 0 3%,#00ff88 7%,#087b50 32%,#031d14 68%,#010806 100%);box-shadow:inset -20px -18px 35px #000,inset 12px 10px 28px rgba(113,255,190,.5),0 0 42px rgba(0,255,136,.42);animation:coreShift 4s ease-in-out infinite alternate}
-.orb-halo{position:absolute;inset:8px;border-radius:50%;border:1px solid rgba(0,255,136,.55);border-top-color:transparent;border-left-color:rgba(0,255,136,.1);animation:spin 5s linear infinite}.halo-two{inset:19px -4px;animation-duration:7s;animation-direction:reverse}
-.orb-dot{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--cyber-soft);box-shadow:0 0 13px 3px rgba(0,255,136,.65)}.dot-1{top:4px;left:91px}.dot-2{top:41px;right:4px}.dot-3{bottom:24px;right:18px}.dot-4{bottom:1px;left:73px}.dot-5{bottom:47px;left:2px}.dot-6{top:34px;left:14px}.dot-1,.dot-4{animation:dotPulse 1.5s ease-in-out infinite}.dot-2,.dot-5{animation:dotPulse 1.5s .5s ease-in-out infinite}.dot-3,.dot-6{animation:dotPulse 1.5s 1s ease-in-out infinite}
-@keyframes spin{to{transform:rotate(360deg)}}@keyframes blink{50%{opacity:.25;transform:scale(.72)}}@keyframes dotPulse{50%{transform:scale(.4);opacity:.35}}@keyframes orbBreathe{50%{transform:scale(1.045)}}@keyframes coreShift{to{filter:hue-rotate(12deg) brightness(1.12)}}
-@media(max-width:650px){.career-hero{flex-direction:column;text-align:center}.eyebrow{justify-content:center}.thinking-orb{width:150px;height:150px;flex-basis:150px}.orb-core{inset:23px}.orb-dot{display:none}}@media(prefers-reduced-motion:reduce){.career-hero *{animation:none!important}}
+.eyebrow{display:flex;align-items:center;gap:.55rem;color:var(--cyber);letter-spacing:.18em;font-size:.74rem;font-weight:800;margin:0}.live-dot{width:8px;height:8px;border-radius:50%;background:var(--cyber);box-shadow:0 0 16px var(--cyber);animation:blink 1.4s ease-in-out infinite}.state-wrap{display:inline-grid}.state-wrap span{grid-area:1/1}.state-thinking{animation:thinkingState 6s ease-in-out infinite}.state-solving{animation:solvingState 6s ease-in-out infinite}
+.thinking-orb{width:200px;height:200px;flex:0 0 200px;position:relative;border-radius:50%;perspective:500px;filter:drop-shadow(0 0 22px rgba(0,255,136,.26));animation:orbBreathe 3.2s ease-in-out infinite}.thinking-orb:after{content:"";position:absolute;inset:25%;border-radius:50%;background:radial-gradient(circle,rgba(0,255,136,.11),transparent 70%);animation:coreGlow 2.4s ease-in-out infinite}
+.particle-ring{--radius:82px;position:absolute;left:50%;top:50%;width:0;height:0;animation:ringTurn 8s linear infinite}.particle{position:absolute;left:0;top:0;width:5px;height:5px;border-radius:50%;background:var(--cyber-soft);box-shadow:0 0 8px rgba(0,255,136,.9);transform:rotate(calc(var(--i) * 30deg)) translateX(var(--radius));animation:particleFade 2.4s calc(var(--delay) * -.16s) ease-in-out infinite}
+.ring-1{--radius:48px;top:24%;transform:scaleY(.34);animation-duration:6.8s}.ring-2{--radius:72px;top:37%;transform:scaleY(.25);animation-duration:8.2s;animation-direction:reverse}.ring-3{--radius:88px;top:50%;transform:scaleY(.2);animation-duration:9.5s}.ring-4{--radius:72px;top:63%;transform:scaleY(.25);animation-duration:7.6s;animation-direction:reverse}.ring-5{--radius:48px;top:76%;transform:scaleY(.34);animation-duration:6.2s}.vertical-ring{--radius:88px;transform:rotate(90deg) scaleY(.2);animation:verticalTurn 8.8s linear infinite reverse}
+#career-chat{border:1px solid rgba(0,255,136,.48)!important;border-radius:16px!important;box-shadow:0 0 0 1px rgba(0,255,136,.08),0 10px 32px rgba(0,0,0,.12)!important;overflow:hidden}
+#career-input{border:2px solid rgba(0,255,136,.72)!important;border-radius:14px!important;background:rgba(0,255,136,.035)!important;box-shadow:0 0 0 3px rgba(0,255,136,.07),0 0 18px rgba(0,255,136,.12)!important;transition:border-color .2s ease,box-shadow .2s ease!important}
+#career-input:focus-within{border-color:var(--cyber)!important;box-shadow:0 0 0 4px rgba(0,255,136,.13),0 0 24px rgba(0,255,136,.25)!important}
+#career-input textarea{font-size:1rem!important;padding:14px 16px!important;min-height:52px!important}#career-input textarea::placeholder{color:#70877c!important;opacity:1!important}
+@keyframes ringTurn{from{rotate:0deg}to{rotate:360deg}}@keyframes verticalTurn{from{rotate:90deg}to{rotate:450deg}}@keyframes blink{50%{opacity:.2;transform:scale(.65)}}@keyframes particleFade{0%,100%{opacity:.12;scale:.45}45%{opacity:1;scale:1.35}70%{opacity:.48;scale:.8}}@keyframes orbBreathe{50%{transform:scale(1.055)}}@keyframes coreGlow{50%{opacity:.25;transform:scale(.7)}}@keyframes thinkingState{0%,42%{opacity:1}50%,92%{opacity:0}100%{opacity:1}}@keyframes solvingState{0%,42%{opacity:0}50%,92%{opacity:1}100%{opacity:0}}
+@media(max-width:650px){.career-hero{flex-direction:column;text-align:center}.eyebrow{justify-content:center}.thinking-orb{width:170px;height:170px;flex-basis:170px;transform:scale(.85)}}@media(prefers-reduced-motion:reduce){.career-hero *{animation:none!important}.state-solving{display:none}}
 """
 
 HEAD = """
@@ -116,5 +141,5 @@ if __name__ == "__main__":
     me = Me()
     with gr.Blocks(title="My AI Conversation Career", css=CSS, head=HEAD) as demo:
         gr.HTML(ORB_HTML)
-        gr.ChatInterface(me.chat, type="messages", examples=["Tell me about your cloud experience.", "Which programming languages do you use?", "What AI and robotics work interests you?"], textbox=gr.Textbox(placeholder="Ask about my career…", container=False))
+        gr.ChatInterface(me.chat, type="messages", chatbot=gr.Chatbot(elem_id="career-chat"), examples=["Tell me about your cloud experience.", "Which programming languages do you use?", "What AI and robotics work interests you?"], textbox=gr.Textbox(placeholder="Write your question here…", container=False, elem_id="career-input"))
     demo.launch()
