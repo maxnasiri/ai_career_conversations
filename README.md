@@ -7,7 +7,7 @@ sdk: gradio
 sdk_version: 5.33.1
 app_file: app.py
 thumbnail: https://huggingface.co/spaces/maxnasiri/career_conversations/resolve/main/assets/ai-career-preview-v2.png
-short_description: Chat with my AI profile about my career and technical skills.
+short_description: AI career conversation about my technical skills.
 pinned: false
 ---
 
